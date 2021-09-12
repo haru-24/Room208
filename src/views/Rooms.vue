@@ -11,7 +11,8 @@
     <hr />
     <!-- 2.4HTMLにfirebaseのデータを書き出す -->
     <div v-for="(content, index) in contents" :key="index">
-      USER:<span>{{ content.data().userName }}</span>
+      <span>{{ content.data().createdAt }}</span>
+      <span class="mrl-20">USER:{{ content.data().userName }}</span>
       <span class="mrl-20">{{ content.data().content }}</span>
       <button @click="deleteContent(content)">削除</button>
     </div>
@@ -60,6 +61,10 @@ export default {
           .add({
             userName: this.inputUserName,
             content: this.inputPostContent,
+            // 2.5 書き込み時間の追加
+            createdAt: `${new Date().getFullYear()}/${
+              new Date().getMonth() + 1
+            }/${new Date().getDate()}/${new Date().getHours()}:${new Date().getMinutes()}`,
           });
         this.inputPostContent = "";
       } else {
