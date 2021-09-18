@@ -2,9 +2,11 @@
   <div>
     <!-- 2.1チャット文の挿入 -->
     <div>
-      USER：<input v-model="inputUserName" />
-      <p></p>
-      COMMENT：<textarea v-model="inputPostContent"></textarea>
+      <h3>USER:{{ loginUserName }}</h3>
+    </div>
+    <div>
+      <label for="comment">COMMENT：</label>
+      <textarea v-model="inputPostContent"></textarea>
       <br />
       <button @click="addContent">送信</button>
     </div>
@@ -30,13 +32,14 @@ export default {
   data() {
     return {
       // 2.0入力データを格納
-      inputUserName: "",
+
       inputPostContent: "",
       contents: [],
+      loginUserName: "",
     };
   },
   // 2.3contentを呼び出す
-  beforeCreate() {
+  created() {
     firebase
       .firestore()
       .collection("rooms")
@@ -48,18 +51,43 @@ export default {
           this.contents.push(doc);
         });
       });
+    // ログイン機能 uidをもとにデータベースからユーザー情報を取得
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+      console.log("ログインしてるよ");
+    } else {
+      console.log("ログインしてないよ");
+    }
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log("login");
+        firebase
+          .firestore()
+          .collection("users")
+          .doc(firebase.auth().currentUser.uid)
+          .get()
+          .then((snapshot) => {
+            console.log(snapshot.data().userName);
+            this.userName = snapshot.data().userName;
+          });
+      } else {
+        console.log("logout");
+      }
+    });
   },
+
   methods: {
     // 2.2チャットデータを追加
     addContent() {
-      if (this.inputPostContent != "" || this.inputUserName != "") {
+      if (this.inputPostContent != "") {
         firebase
           .firestore()
           .collection("rooms")
           .doc(this.$route.params.roomId)
           .collection("content")
           .add({
-            userName: this.inputUserName,
+            // ログイン時のuserName("users")を"content"の中にもう一度入れている
+            userName: this.loginUserName,
             content: this.inputPostContent,
             // 2.5 書き込み時間の追加
             createdAt: `${new Date().getFullYear()}/${
@@ -93,7 +121,7 @@ export default {
 }
 textarea {
   resize: none;
-  height: 50px;
+  height: 20px;
   width: 300px;
 }
 </style>

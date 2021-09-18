@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h1>Room208</h1>
+    <h1>Home</h1>
+    <h2>こんにちは、{{ userName }}さん</h2>
     <!-- 1.1ルーム作成に必要な要素 -->
     ルーム名<input v-model="inputRoomName" />
     <button @click="addRoom">ルームを追加</button>
@@ -28,26 +29,54 @@ export default {
       // 1.0ルーム名格納
       inputRoomName: "",
       rooms: "",
+      userName: "",
     };
   },
+
   // 1.3 roomsデータ取得
-  beforeCreate() {
+  created() {
     firebase
       .firestore()
       .collection("rooms")
+      .where("isDeleted", "==", false)
       .onSnapshot((querySnapshot) => {
         this.rooms = [];
         querySnapshot.forEach((doc) => {
           this.rooms.push(doc);
         });
       });
+    // ログイン機能 uidをもとにデータベースからユーザー情報を取得
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+      console.log("ログインしてるよ");
+    } else {
+      console.log("ログインしてないよ");
+    }
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log("login");
+        firebase
+          .firestore()
+          .collection("users")
+          .doc(firebase.auth().currentUser.uid)
+          .get()
+          .then((snapshot) => {
+            console.log(snapshot.data().userName);
+            this.userName = snapshot.data().userName;
+          });
+      } else {
+        console.log("logout");
+      }
+    });
   },
+
   methods: {
     addRoom() {
       //1.2 ルーム作成
       if (this.inputRoomName != "") {
         firebase.firestore().collection("rooms").add({
           roomName: this.inputRoomName,
+          isDeleted: false,
         });
       } else {
         alert("ルームを作成できません");
@@ -57,7 +86,9 @@ export default {
     deleteRoom(room) {
       const deleteConfirm = confirm("ルームを削除しますか？");
       if (deleteConfirm) {
-        firebase.firestore().collection("rooms").doc(room.id).delete();
+        firebase.firestore().collection("rooms").doc(room.id).update({
+          isDeleted: true,
+        });
       }
     },
   },
