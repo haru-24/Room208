@@ -6,7 +6,11 @@
     </div>
     <div>
       <label for="comment">COMMENT：</label>
-      <textarea v-model="inputPostContent"></textarea>
+      <input
+        class="text-box"
+        v-model="inputPostContent"
+        @keypress.enter="addContent"
+      />
       <br />
       <button @click="addContent">送信</button>
     </div>
@@ -17,6 +21,9 @@
       <span class="mrl-20">USER:{{ content.data().userName }}</span>
       <span class="mrl-20">{{ content.data().content }}</span>
       <button @click="deleteContent(content)">削除</button>
+    </div>
+    <div>
+      <router-link to="/home" class="room-link">ルームを出る</router-link>
     </div>
   </div>
 </template>
@@ -39,44 +46,42 @@ export default {
     };
   },
   // 2.3contentを呼び出す
+
   created() {
-    firebase
-      .firestore()
-      .collection("rooms")
-      .doc(this.$route.params.roomId)
-      .collection("content")
-      .onSnapshot((querySnapshot) => {
-        this.contents = [];
-        querySnapshot.forEach((doc) => {
-          this.contents.push(doc);
-        });
-      });
+    this.createContent();
+
     // ログイン機能 uidをもとにデータベースからユーザー情報を取得
-    const currentUser = firebase.auth().currentUser;
-    if (currentUser) {
-      console.log("ログインしてるよ");
-    } else {
-      console.log("ログインしてないよ");
-    }
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        console.log("login");
         firebase
           .firestore()
           .collection("users")
           .doc(firebase.auth().currentUser.uid)
           .get()
           .then((snapshot) => {
-            console.log(snapshot.data().userName);
-            this.userName = snapshot.data().userName;
+            this.loginUserName = snapshot.data().userName;
           });
       } else {
         console.log("logout");
+        this.$router.push("/login");
       }
     });
   },
 
   methods: {
+    createContent() {
+      firebase
+        .firestore()
+        .collection("rooms")
+        .doc(this.$route.params.roomId)
+        .collection("content")
+        .onSnapshot((querySnapshot) => {
+          this.contents = [];
+          querySnapshot.forEach((doc) => {
+            this.contents.push(doc);
+          });
+        });
+    },
     // 2.2チャットデータを追加
     addContent() {
       if (this.inputPostContent != "") {
@@ -115,13 +120,18 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .mrl-20 {
   margin-left: 20px;
 }
-textarea {
+.text-box {
   resize: none;
   height: 20px;
   width: 300px;
+}
+.room-link {
+  position: absolute;
+  top: 10px;
+  left: 30px;
 }
 </style>

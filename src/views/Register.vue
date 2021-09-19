@@ -16,6 +16,9 @@
       </div>
       <div class="input-group">
         <button type="button" @click="register">新規登録</button>
+        <br />
+        <p class="color-red">{{ errorMessage }}</p>
+        <router-link to="/login/">ログイン画面へ</router-link>
       </div>
     </form>
   </div>
@@ -30,15 +33,18 @@ export default {
       email: "",
       password: "",
       userName: "",
+      errorMessage: "",
     };
   },
   methods: {
+    // アカウント作成
     register() {
       firebase
         .auth()
         .createUserWithEmailAndPassword(this.email, this.password)
         .then((result) => {
           console.log(result);
+          // データベースに保存
           firebase
             .firestore()
             .collection("users")
@@ -50,17 +56,39 @@ export default {
             })
             .then(() => {
               alert("アカウントを作成しました");
-              this.$router.push("/login");
-              this.userName = "";
+              // ログイン
+              firebase
+                .auth()
+                .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+                .then(() => {
+                  return (
+                    firebase
+                      .auth()
+                      .signInWithEmailAndPassword(this.email, this.password)
+                      .then((userCredential) => {
+                        console.log(userCredential.user.uid);
+                      })
+                      // エラー判定
+                      .catch((error) => {
+                        console.log(error);
+                      })
+                  );
+                });
             })
             .catch((error) => {
               console.log(error);
             });
         })
         .catch((error) => {
-          alert(error.message);
+          this.errorMessage = error.message;
         });
     },
   },
 };
 </script>
+
+<style scoped>
+.color-red {
+  color: red;
+}
+</style>

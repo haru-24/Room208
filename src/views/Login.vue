@@ -8,13 +8,19 @@
       </div>
       <div class="input-group">
         <label for="password">パスワード</label>
-        <input type="password" id="password" v-model="password" />
+        <input
+          type="password"
+          id="password"
+          v-model="password"
+          @keypress.enter="login"
+        />
       </div>
       <div class="input-group">
         <button type="button" @click="login">ログイン</button>
       </div>
     </form>
-    <router-link to="/login/rigister">新規登録</router-link>
+    <p class="err-msg">{{ errorMessage }}</p>
+    <router-link to="/login/register">新規登録</router-link>
   </div>
 </template>
 
@@ -26,6 +32,7 @@ export default {
     return {
       email: "",
       password: "",
+      errorMessage: "",
     };
   },
   methods: {
@@ -38,11 +45,10 @@ export default {
             .auth()
             .signInWithEmailAndPassword(this.email, this.password)
             .then((userCredential) => {
-              this.$router.push("/home");
               console.log(userCredential.user.uid);
             })
             .catch((error) => {
-              alert(error.message);
+              this.errorMessage = error.message;
             });
         });
     },
@@ -53,5 +59,8 @@ export default {
 <style>
 .input-group {
   margin: 5px;
+}
+.err-msg {
+  color: red;
 }
 </style>

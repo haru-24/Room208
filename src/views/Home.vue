@@ -3,7 +3,7 @@
     <h1>Home</h1>
     <h2>こんにちは、{{ userName }}さん</h2>
     <!-- 1.1ルーム作成に必要な要素 -->
-    ルーム名<input v-model="inputRoomName" />
+    ルーム名<input v-model="inputRoomName" @keypress.enter="addRoom" />
     <button @click="addRoom">ルームを追加</button>
     <div v-for="room in rooms" :key="room.id">
       <router-link :to="{ path: /rooms/ + room.id }">{{
@@ -12,6 +12,9 @@
 
       <!-- 1.4削除ボタン追加 -->
       <button @click="deleteRoom(room)">削除</button>
+    </div>
+    <div>
+      <button class="logout" @click="logout">ログアウト</button>
     </div>
   </div>
 </template>
@@ -35,42 +38,37 @@ export default {
 
   // 1.3 roomsデータ取得
   created() {
-    firebase
-      .firestore()
-      .collection("rooms")
-      .where("isDeleted", "==", false)
-      .onSnapshot((querySnapshot) => {
-        this.rooms = [];
-        querySnapshot.forEach((doc) => {
-          this.rooms.push(doc);
-        });
-      });
-    // ログイン機能 uidをもとにデータベースからユーザー情報を取得
-    const currentUser = firebase.auth().currentUser;
-    if (currentUser) {
-      console.log("ログインしてるよ");
-    } else {
-      console.log("ログインしてないよ");
-    }
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        console.log("login");
-        firebase
-          .firestore()
-          .collection("users")
-          .doc(firebase.auth().currentUser.uid)
-          .get()
-          .then((snapshot) => {
-            console.log(snapshot.data().userName);
-            this.userName = snapshot.data().userName;
-          });
-      } else {
-        console.log("logout");
-      }
-    });
+    this.createRoom(), this.createLoginUser();
   },
 
   methods: {
+    createRoom() {
+      firebase
+        .firestore()
+        .collection("rooms")
+        .where("isDeleted", "==", false)
+        .onSnapshot((querySnapshot) => {
+          this.rooms = [];
+          querySnapshot.forEach((doc) => {
+            this.rooms.push(doc);
+          });
+        });
+    },
+    // ログイン機能 uidをもとにデータベースからユーザー情報を取得
+    createLoginUser() {
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          firebase
+            .firestore()
+            .collection("users")
+            .doc(firebase.auth().currentUser.uid)
+            .get()
+            .then((snapshot) => {
+              this.userName = snapshot.data().userName;
+            });
+        }
+      });
+    },
     addRoom() {
       //1.2 ルーム作成
       if (this.inputRoomName != "") {
@@ -81,6 +79,7 @@ export default {
       } else {
         alert("ルームを作成できません");
       }
+      this.inputRoomName = "";
     },
     // 1.5ルームの削除
     deleteRoom(room) {
@@ -91,6 +90,27 @@ export default {
         });
       }
     },
+    // ログアウト
+    logout() {
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          // Sign-out successful.
+        })
+        .catch((error) => {
+          console.log(error);
+          // An error happened.
+        });
+    },
   },
 };
 </script>
+
+<style>
+.logout {
+  position: absolute;
+  top: 10px;
+  right: 30px;
+}
+</style>
