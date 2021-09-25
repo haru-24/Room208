@@ -86,6 +86,7 @@ export default {
         .collection("rooms")
         .doc(this.$route.params.roomId)
         .collection("content")
+        .orderBy("createdAt", "desc")
         .onSnapshot((querySnapshot) => {
           this.contents = [];
           querySnapshot.forEach((doc) => {
@@ -108,7 +109,7 @@ export default {
             // 2.5 書き込み時間の追加
             createdAt: `${new Date().getFullYear()}/${
               new Date().getMonth() + 1
-            }/${new Date().getDate()}/${new Date().getHours()}:${new Date().getMinutes()}`,
+            }/${new Date().getDate()}/${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`,
           });
         this.inputPostContent = "";
       } else {
@@ -266,7 +267,7 @@ export default {
 }
 
 .content-at {
-  width: 200px;
+  width: 230px;
   height: 35px;
   margin-left: 20px;
   font-family: Avenir;
@@ -279,7 +280,7 @@ export default {
 }
 .delete-btn {
   margin-top: 25px;
-
+  margin-right: auto;
   width: 30px;
   height: 30px;
   border-radius: 100%;
