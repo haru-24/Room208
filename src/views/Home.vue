@@ -4,6 +4,7 @@
     <div class="header">
       <h1 class="title">Room208</h1>
       <button class="logout" @click="logout">ログアウト</button>
+      <p>{{ this.message }}</p>
     </div>
 
     <!-- 1.1ルーム作成に必要な要素 -->
@@ -35,6 +36,10 @@ import "firebase/database";
 import "firebase/firestore";
 
 export default {
+  props: {
+    message: String,
+  },
+
   name: "home",
 
   data() {
