@@ -280,7 +280,7 @@ export default {
 }
 .delete-btn {
   margin-top: 25px;
-  margin-right: auto;
+  margin-left: 20px;
   width: 30px;
   height: 30px;
   border-radius: 100%;
